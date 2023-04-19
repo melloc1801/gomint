@@ -1,0 +1,3 @@
+export enum REPORT_ERROR {
+  NOT_FOUND = "REPORT_ERROR_NOT_FOUND",
+}

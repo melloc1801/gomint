@@ -1,0 +1,4 @@
+node_modules
+.vscode
+.do/prod.spec.yml
+.idea 

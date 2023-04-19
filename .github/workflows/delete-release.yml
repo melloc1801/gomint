@@ -1,0 +1,34 @@
+name: delete-release
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - "main"
+      - "discord-requirement"
+
+env:
+  BRANCH_NAME: "${{ github.head_ref }}"
+  DIGITALOCEAN_ACCESS_TOKEN: dop_v1_8848a000bcdff893ff1af9ed9d464e83542b48c3e2ba906bae41c5ecedd4ff05
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install DO CLI
+        run: |
+          cd ~
+          wget https://github.com/digitalocean/doctl/releases/download/v1.77.0/doctl-1.77.0-linux-amd64.tar.gz
+          tar xf ~/doctl-1.77.0-linux-amd64.tar.gz
+          sudo mv ~/doctl /usr/local/bin
+
+      - name: Get app ID
+        run: |
+          cmd="doctl apps list --format 'Spec.Name, ID' --no-header | awk '/$BRANCH_NAME/ {print \$2}'"
+          echo "APP ID: $(eval $cmd)"
+
+      - name: Delete DO infra
+        run: |
+          cmd="doctl apps list --format 'Spec.Name, ID' --no-header | awk '/$(echo $BRANCH_NAME | cut -c1-30)/ {print \$2}'"
+          doctl apps delete --force "$(eval $cmd)"

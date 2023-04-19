@@ -1,0 +1,197 @@
+name: dev
+region: nyc
+databases:
+  - engine: PG
+    name: db
+    num_nodes: 1
+    size: basic-xs
+    version: "12"
+domains:
+  - domain: dev.gomintnft.com
+    type: PRIMARY
+    zone: gomintnft.com
+jobs:
+  - envs:
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${db.DATABASE_URL}
+    github:
+      branch: main
+      repo: gomintnft/app
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    kind: POST_DEPLOY
+    name: migrate
+    run_command: cd server && npx prisma migrate deploy
+services:
+  - build_command: cd server && npx prisma generate && npm run build
+    environment_slug: node-js
+    envs:
+      - key: SESSION_NAME
+        scope: RUN_TIME
+        value: gomint.sid
+      - key: COOKIE_SECRET
+        type: SECRET
+        value: ASAVDFGVDSFBVDVDFVDF
+      - key: DB_HOST
+        scope: RUN_TIME
+        value: ${db.HOSTNAME}
+      - key: DB_NAME
+        scope: RUN_TIME
+        value: ${db.DATABASE}
+      - key: DB_USER
+        scope: RUN_TIME
+        value: ${db.USERNAME}
+      - key: DB_PASS
+        scope: RUN_TIME
+        value: ${db.PASSWORD}
+      - key: DB_PORT
+        scope: RUN_TIME
+        value: ${db.PORT}
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${db.DATABASE_URL}
+
+      - key: FE_URL
+        scope: RUN_TIME
+        value: ${client.PUBLIC_URL}
+
+      - key: ETHEREUM_PROVIDER_URL
+        scope: RUN_TIME
+        value: https://eth-rinkeby.alchemyapi.io/v2/hUJRAiUK4fVS3xPJc0MdQdn4-GGwga8a
+
+      - key: DO_REGION
+        scope: RUN_TIME
+        value: nyc3
+      - key: DO_BUCKET
+        scope: RUN_TIME
+        value: gomint-dev-images
+      - key: DO_AT
+        type: SECRET
+        value: IC7KP5TOJ6UXUFXTVEUY
+      - key: DO_ENDPOINT
+        scope: RUN_TIME
+        value: https://nyc3.digitaloceanspaces.com
+      - key: DO_SAT
+        type: SECRET
+        value: mq4Xi/zuxLFLJ5S4rJ3k3BA9hc8ZF0yeoQpcxw8jseI
+      - key: DO_WINNERS_REGION
+        scope: RUN_TIME
+        value: mq4Xi/zuxLFLJ5S4rJ3k3BA9hc8ZF0yeoQpcxw8jseI
+      - key: DO_WINNERS_REGION
+        type: SECRET
+        value: sfo3
+      - key: DO_WINNERS_BUCKET
+        scope: RUN_TIME
+        value: sfo3
+      - key: DO_WINNERS_BUCKET
+        type: SECRET
+        value: gomint-dev-winners
+      - key: DO_WINNERS_ENDPOINT
+        scope: RUN_TIME
+        value: gomint-dev-winners
+      - key: DO_WINNERS_ENDPOINT
+        type: SECRET
+        value: https://sfo3.digitaloceanspaces.com
+      - key: TTL
+        scope: BUILD_TIME
+        value: "60"
+      - key: LIMIT
+        scope: BUILD_TIME
+        value: "60"
+      - key: MAIL_LOGIN
+        scope: RUN_TIME
+        value: no-reply@gomintnft.com
+      - key: MAIL_PASSWORD
+        scope: RUN_TIME
+        value: udt2rur0fxm.nzw7AWG
+      - key: MAIL_HOST
+        scope: RUN_TIME
+        value: smtppro.zoho.eu
+      - key: MAIL_PORT
+        scope: RUN_TIME
+        value: "465"
+      - key: TWITTER_CLIENT_ID
+        scope: RUN_TIME
+        value: XALjglbSoS3WZIUfKVkFHLRCK
+      - key: TWITTER_CLIENT_SECRET
+        scope: RUN_TIME
+        value: YtBI1XfediZoQxQhinnHNlE7QCPdo3qJIU3TGFfIi3qSHZDwaB
+      - key: TWITTER_CALLBACK_URI
+        scope: RUN_TIME
+        value: https://dev.gomintnft.com/auth/twitter
+      - key: DISCORD_CLIENT_ID
+        scope: RUN_TIME
+        value: "980729992453435475"
+      - key: DISCORD_CLIENT_SECRET
+        scope: RUN_TIME
+        value: 0vC7oCM2AmBBWuFVzLADB3G_T8uIE4_v
+      - key: DISCORD_API
+        scope: RUN_TIME
+        value: https://discord.com/api/v10
+      - key: DISCORD_CALLBACK_URI
+        scope: RUN_TIME
+        value: https://dev.gomintnft.com/auth/discord
+      - key: CONTRACT_ADDRESS
+        scope: RUN_TIME
+        value: "0x7E82E7477f6Ff3dd4bbCF1dF081894b4aCa55640"
+      - key: ALCHEMY_KEY
+        scope: RUN_TIME
+        value: "hUJRAiUK4fVS3xPJc0MdQdn4-GGwga8a"
+      - key: FE_DOMAIN
+        scope: RUN_AND_BUILD_TIME
+        value: ${APP_DOMAIN}
+    github:
+      branch: main
+      deploy_on_push: true
+      repo: gomintnft/app
+    http_port: 4001
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    name: server
+    routes:
+      - path: /server
+    run_command: cd server && npm run start:prod
+    source_dir: /
+
+  - build_command: cd client && npm run build
+    environment_slug: node-js
+    envs:
+      - key: NEXT_PUBLIC_NETWORK
+        scope: BUILD_TIME
+        value: mainnet
+      - key: NEXT_PUBLIC_LOGGING
+        scope: BUILD_TIME
+        value: gLNX18KrSugcUprmnYpSdRsV
+      - key: NEXT_PUBLIC_API_URL
+        scope: BUILD_TIME
+        value: ${server.PUBLIC_URL}
+      - key: NEXT_PUBLIC_INFURA_ID
+        type: SECRET
+        value: 388a8a46ac0e46cba8ec109c4ec80a1e
+      - key: NEXT_PUBLIC_CONTRACT_ADDRESS
+        scope: RUN_TIME
+        value: "0x7E82E7477f6Ff3dd4bbCF1dF081894b4aCa55640"
+    github:
+      branch: main
+      deploy_on_push: true
+      repo: gomintnft/app
+    http_port: 4000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    name: client
+    routes:
+      - path: /
+    run_command: cd client && npm start -- -H 0.0.0.0 -p ${PORT:-8080}
+    source_dir: /
+jobs:
+  - name: migrate
+    run_command: cd server && npx prisma migrate deploy
+    github:
+      branch: main
+      repo: gomintnft/app
+    envs:
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${db.DATABASE_URL}
+    kind: POST_DEPLOY

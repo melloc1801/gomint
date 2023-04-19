@@ -1,0 +1,50 @@
+name: release-branch
+
+on:
+  pull_request:
+    types: [opened, reopened]
+    branches:
+      - "main"
+      - "discord-requirement"
+
+env:
+  REPO_NAME: ${{ github.repository }}
+  BRANCH_NAME: "${{ github.head_ref }}"
+  BRANCH_DOMAIN: ".gomintnft.com"
+  DIGITALOCEAN_ACCESS_TOKEN: dop_v1_8848a000bcdff893ff1af9ed9d464e83542b48c3e2ba906bae41c5ecedd4ff05
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install YAML parser
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod a+x /usr/local/bin/yq
+          yq --version
+
+      - name: Install DO CLI
+        run: |
+          cd ~
+          wget https://github.com/digitalocean/doctl/releases/download/v1.77.0/doctl-1.77.0-linux-amd64.tar.gz
+          tar xf ~/doctl-1.77.0-linux-amd64.tar.gz
+          sudo mv ~/doctl /usr/local/bin
+
+      - name: Configure DO infra
+        run: |
+          echo "Branch name: $BRANCH_NAME"
+          projectName=$(echo $BRANCH_NAME | cut -c1-30) pathEnv=".name" yq -i e 'eval(strenv(pathEnv)) = strenv(projectName)' .do/dev.spec.yml
+          pathEnv=".services[1].github.branch" yq -i e 'eval(strenv(pathEnv)) = strenv(BRANCH_NAME)' .do/dev.spec.yml
+          pathEnv=".services[1].github.repo" yq -i e 'eval(strenv(pathEnv)) = strenv(REPO_NAME)' .do/dev.spec.yml
+          pathEnv=".services[0].github.branch" yq -i e 'eval(strenv(pathEnv)) = strenv(BRANCH_NAME)' .do/dev.spec.yml
+          pathEnv=".services[0].github.repo" yq -i e 'eval(strenv(pathEnv)) = strenv(REPO_NAME)' .do/dev.spec.yml
+          pathEnv=".jobs[0].github.repo" yq -i e 'eval(strenv(pathEnv)) = strenv(REPO_NAME)' .do/dev.spec.yml
+          pathEnv=".jobs[0].github.branch" yq -i e 'eval(strenv(pathEnv)) = strenv(BRANCH_NAME)' .do/dev.spec.yml
+          pathEnv=".domains[0].domain" domain="$BRANCH_NAME$BRANCH_DOMAIN" yq -i e 'eval(strenv(pathEnv)) = strenv(domain)' .do/dev.spec.yml
+
+      - name: Deploy DO infra
+        run: |
+          doctl apps create --spec .do/dev.spec.yml
